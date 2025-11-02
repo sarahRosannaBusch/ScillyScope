@@ -1,0 +1,23 @@
+/** 
+ * @filename    styles.css
+ * @brief       ScillyScope styles
+ * @author      Sarah Rosanna Busch
+ * @version     0
+ * @date        2 Nov 2025
+ */
+
+* {
+    box-sizing: border-box; /* padding and border are included in total width/height of all elements */
+    margin: 0px;
+}
+
+:root {
+    --bg-color: black;
+    --fore-color: grey;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--fore-color);
+    text-align: center;
+}
