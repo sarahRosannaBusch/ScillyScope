@@ -2,8 +2,8 @@
  * @file    game.js
  * @brief   ScillyScope scripts
  * @authors Sarah Busch
- * @version 0.1
- * @date    2 Nov 2025
+ * @version 0.2
+ * @date    7 Nov 2025
  */
 
 const keyboard = document.getElementById('keyboard');
@@ -32,9 +32,16 @@ const activeNotes = {};
 
 // visual amplitude + frequency state
 let visualAmp = 0;        // 0..1
-let targetAmp = 0;        // 0 or 1
+let targetAmp = 0;        // 0 or volume
 let currentFreq = null;   // active note freq (if any)
 let lastFreq = 0;         // remember last freq to draw during shrink
+
+// global volume variable (0..1)
+let volume = 0.5;
+const volumeSlider = document.getElementById('volume-slider');
+volumeSlider.addEventListener('input', () => {
+    volume = volumeSlider.value / 100; // normalize 0..1
+});
 
 function startNote(note, freq) {
 	const oscFund = audioCtx.createOscillator();
@@ -47,18 +54,18 @@ function startNote(note, freq) {
 	const lowshelf = audioCtx.createBiquadFilter();
 	lowshelf.type = 'lowshelf';
 	lowshelf.frequency.value = 150;
-	lowshelf.gain.value = 5;         // subtle boost
+	lowshelf.gain.value = 5; // subtle boost
 
 	oscFund.connect(lowshelf);
-
 	lowshelf.connect(gain);
 	gain.connect(audioCtx.destination);
 	gain.connect(analyser);
 
 	const now = audioCtx.currentTime;
 	const attack = 0.01;
+
 	gain.gain.setValueAtTime(0, now);
-	gain.gain.linearRampToValueAtTime(1, now + attack);
+	gain.gain.linearRampToValueAtTime(volume, now + attack);
 
 	oscFund.start(now);
 
@@ -66,7 +73,7 @@ function startNote(note, freq) {
 
 	currentFreq = freq;
 	lastFreq = freq;
-	targetAmp = 1;
+	targetAmp = volume; 
 }
 
 function stopNote(note) {
