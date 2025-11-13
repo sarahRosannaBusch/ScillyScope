@@ -5,8 +5,8 @@
   <title> ScillyScope </title>
   <meta name='author' content='Sarah Rosanna Busch' />
   <meta name='description' content='My entry for the GitHub Game Off 2025' />
-  <meta name='version' content='0.4' />
-  <meta name='date' content='12 Nov 2025' />
+  <meta name='version' content='0.5' />
+  <meta name='date' content='13 Nov 2025' />
   <meta name='keywords' content='waves, sound, oscilloscope, piano, decode, puzzle' />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='50%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='80'>∿</text></svg>">
@@ -16,16 +16,20 @@
 <div id="game">
     <div id="oscilloscope">
         <div class="top-row">
-            <button id="play-button">Play Message</button>
+            <button id="play-button" class="btn btn-play" type="button" title="Play message" aria-label="Play message" aria-pressed="false" aria-controls="recorded-sequence">▶ Play Message</button>
         </div>
         <div class="left-spacer"></div>
         <canvas id="scope-screen"></canvas>
         <div class="right-spacer">
-            <span class="speaker-icon">🔊</span>
             <input type="range" id="volume-slider" min="0" max="100" value="50">
-            <span class="mute-icon">🔇</span>
         </div>
-        <div class="bottom-row"></div>
+        <div class="bottom-row">
+            <button id="record-button" class="btn btn-record" type="button" aria-pressed="false" title="Record">⏺ Record</button>
+            <button id="play-bottom-button" class="btn btn-play" type="button" title="Play">▶ Play</button>
+            <!-- readonly text input that will be populated while recording -->
+            <label for="recorded-sequence" class="visually-hidden">Recorded notes</label>
+            <input id="recorded-sequence" type="text" readonly placeholder="Record the notes from the message to decode here" aria-live="polite" />
+        </div>
     </div>
     <div id="keyboard"></div>
 </div>
