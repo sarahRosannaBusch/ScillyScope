@@ -2,8 +2,8 @@
  * @file    game.js
  * @brief   ScillyScope scripts
  * @authors Sarah Busch
- * @version 0.2
- * @date    7 Nov 2025
+ * @version 0.3
+ * @date    12 Nov 2025
  */
 
 const keyboard = document.getElementById('keyboard');
@@ -43,12 +43,44 @@ volumeSlider.addEventListener('input', () => {
     volume = volumeSlider.value / 100; // normalize 0..1
 });
 
+// define melody sequence
+const melody = [
+	{ note: 'C', octave: 4, duration: 0.5 },
+	{ note: 'D', octave: 4, duration: 0.5 },
+	{ note: 'E', octave: 4, duration: 0.5 },
+	{ note: 'C', octave: 4, duration: 1.0 }
+];
+
+// play melody function
+function playMelody() {
+	let timeOffset = 0;
+
+	melody.forEach(step => {
+		const freq = getFrequency(step.note, step.octave);
+		const fullNote = step.note + step.octave;
+
+		setTimeout(() => {
+			startNote(fullNote, freq);
+		}, timeOffset * 1000);
+
+		setTimeout(() => {
+			stopNote(fullNote);
+		}, (timeOffset + step.duration) * 1000);
+
+		timeOffset += step.duration;
+	});
+}
+
+// hook up play button
+const playButton = document.getElementById('play-button');
+playButton.addEventListener('click', playMelody);
+
 function startNote(note, freq) {
-	const oscFund = audioCtx.createOscillator();
+	const osc = audioCtx.createOscillator();
 	const gain = audioCtx.createGain();
 
-	oscFund.type = 'sine';
-	oscFund.frequency.value = freq;
+	osc.type = 'sine';
+	osc.frequency.value = freq;
 
 	// EQ: gentle bass lift
 	const lowshelf = audioCtx.createBiquadFilter();
@@ -56,7 +88,7 @@ function startNote(note, freq) {
 	lowshelf.frequency.value = 150;
 	lowshelf.gain.value = 5; // subtle boost
 
-	oscFund.connect(lowshelf);
+	osc.connect(lowshelf);
 	lowshelf.connect(gain);
 	gain.connect(audioCtx.destination);
 	gain.connect(analyser);
@@ -67,9 +99,9 @@ function startNote(note, freq) {
 	gain.gain.setValueAtTime(0, now);
 	gain.gain.linearRampToValueAtTime(volume, now + attack);
 
-	oscFund.start(now);
+	osc.start(now);
 
-	activeNotes[note] = { oscFund, gain };
+	activeNotes[note] = { osc, gain };
 
 	currentFreq = freq;
 	lastFreq = freq;
@@ -80,7 +112,7 @@ function stopNote(note) {
 	const entry = activeNotes[note];
 	if (!entry) return;
 
-	const { oscFund, gain } = entry;
+	const { osc, gain } = entry;
 	const now = audioCtx.currentTime;
 	const release = 0.5;
 
@@ -90,7 +122,7 @@ function stopNote(note) {
 	gain.gain.exponentialRampToValueAtTime(0.001, now + release);
 
 	// stop both oscillators after release
-	oscFund.stop(now + release);
+	osc.stop(now + release);
 
 	delete activeNotes[note];
 
@@ -194,20 +226,84 @@ function drawScope() {
 	const delta = (now - lastTime) / 1000;
 	lastTime = now;
 
-	// time-based easing
+	// amplitude easing
 	const step = AMP_TIME > 0 ? delta / AMP_TIME : 1;
-
 	if (visualAmp < targetAmp) {
 		visualAmp = Math.min(visualAmp + step, targetAmp);
 	} else if (visualAmp > targetAmp) {
 		visualAmp = Math.max(visualAmp - step, targetAmp);
 	}
 
-	scopeCtx.fillStyle = '#111';
-	scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+	// clear completely so previous frame (incl. flat line) disappears
+	scopeCtx.globalCompositeOperation = 'source-over';
+	scopeCtx.clearRect(0, 0, scopeCanvas.width, scopeCanvas.height);
 
-	// draw flatline only when visually at (near) zero
-	if (visualAmp <= 0.001) {
+	// --- grid ---
+	const divisionsX = 10;
+	const divisionsY = 8;
+	const paddingX = 16;
+	const paddingY = 12;
+
+	const gridLeft = paddingX;
+	const gridRight = scopeCanvas.width - paddingX;
+	const gridTop = paddingY;
+	const gridBottom = scopeCanvas.height - paddingY;
+
+	const gridWidth = gridRight - gridLeft;
+	const gridHeight = gridBottom - gridTop;
+
+	const spacingX = gridWidth / divisionsX;
+	const spacingY = gridHeight / divisionsY;
+
+	const totalMs = 20;
+	const msPerDivision = totalMs / divisionsX;
+
+	// grid lines
+	scopeCtx.strokeStyle = '#333';
+	scopeCtx.lineWidth = 1;
+
+	// vertical lines + time labels
+	for (let i = 0; i <= divisionsX; i++) {
+		const x = gridLeft + i * spacingX;
+		scopeCtx.beginPath();
+		scopeCtx.moveTo(x, 0);
+		scopeCtx.lineTo(x, scopeCanvas.height);
+		scopeCtx.stroke();
+
+		const timeLabel = (i * msPerDivision) + ' ms';
+		scopeCtx.fillStyle = '#0f0';
+		scopeCtx.font = '12px monospace';
+		scopeCtx.textAlign = 'center';
+		scopeCtx.textBaseline = 'bottom';
+		scopeCtx.fillText(timeLabel, x, gridBottom - 2);
+	}
+
+	// horizontal lines
+	for (let j = 0; j <= divisionsY; j++) {
+		const y = gridTop + j * spacingY;
+		scopeCtx.beginPath();
+		scopeCtx.moveTo(0, y);
+		scopeCtx.lineTo(scopeCanvas.width, y);
+		scopeCtx.stroke();
+	}
+
+	// center reference line as part of the grid (NOT green trace)
+	// make it subtle so it doesn't read as a "flat signal"
+	scopeCtx.save();
+	scopeCtx.strokeStyle = '#2a2a2a'; // subdued grid color
+	scopeCtx.lineWidth = 1;
+	scopeCtx.setLineDash([4, 4]);     // optional: dashed center
+	scopeCtx.beginPath();
+	scopeCtx.moveTo(0, (gridTop + gridBottom) / 2);
+	scopeCtx.lineTo(scopeCanvas.width, (gridTop + gridBottom) / 2);
+	scopeCtx.stroke();
+	scopeCtx.restore();
+
+	// --- waveform drawing ---
+	const freqToDraw = currentFreq != null ? currentFreq : lastFreq;
+
+	if (!freqToDraw || visualAmp <= 0.001) {
+		// idle flat trace ONLY when no signal
 		scopeCtx.strokeStyle = '#0f0';
 		scopeCtx.lineWidth = 2;
 		scopeCtx.beginPath();
@@ -217,11 +313,7 @@ function drawScope() {
 		return;
 	}
 
-	// choose frequency to display:
-	// - if a note is active, use currentFreq
-	// - otherwise, use lastFreq while shrinking
-	const freqToDraw = currentFreq != null ? currentFreq : lastFreq;
-
+	// sine wave
 	scopeCtx.lineWidth = 2;
 	scopeCtx.strokeStyle = '#0f0';
 	scopeCtx.beginPath();
@@ -229,12 +321,17 @@ function drawScope() {
 	const midY = scopeCanvas.height / 2;
 	const amplitude = visualAmp * (scopeCanvas.height / 2 * 0.9);
 
-	const sampleRate = audioCtx.sampleRate;
-	const visibleSeconds = bufferLength / sampleRate;
-	const cycles = freqToDraw * visibleSeconds * 0.5;
+	const totalSeconds = totalMs / 1000;
+	const cycles = freqToDraw * totalSeconds;
+
+	if (typeof drawScope.phase === 'undefined') {
+		drawScope.phase = 0;
+	}
+	const scrollSpeed = 2 * Math.PI * freqToDraw * 0.002;
+	drawScope.phase += scrollSpeed * delta;
 
 	for (let x = 0; x < scopeCanvas.width; x++) {
-		const t = (x / scopeCanvas.width) * cycles * 2 * Math.PI;
+		const t = (x / scopeCanvas.width) * cycles * 2 * Math.PI + drawScope.phase;
 		const y = midY + Math.sin(t) * amplitude;
 		if (x === 0) {
 			scopeCtx.moveTo(x, y);

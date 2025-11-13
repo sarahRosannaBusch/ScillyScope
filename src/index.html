@@ -5,17 +5,19 @@
   <title> ScillyScope </title>
   <meta name='author' content='Sarah Rosanna Busch' />
   <meta name='description' content='My entry for the GitHub Game Off 2025' />
-  <meta name='version' content='0.3' />
-  <meta name='date' content='7 Nov 2025' />
+  <meta name='version' content='0.4' />
+  <meta name='date' content='12 Nov 2025' />
   <meta name='keywords' content='waves, sound, oscilloscope, piano, decode, puzzle' />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <!--link rel='icon shortcut' href='icon.png' /-->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='50%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='80'>∿</text></svg>">
   <link rel='stylesheet' href='styles.css' />
 </head>
 <body>
 <div id="game">
     <div id="oscilloscope">
-        <div class="top-row"></div>
+        <div class="top-row">
+            <button id="play-button">Play Message</button>
+        </div>
         <div class="left-spacer"></div>
         <canvas id="scope-screen"></canvas>
         <div class="right-spacer">

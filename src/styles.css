@@ -2,13 +2,14 @@
  * @filename    styles.css
  * @brief       ScillyScope styles
  * @author      Sarah Rosanna Busch
- * @version     0.3
- * @date        7 Nov 2025
+ * @version     0.4
+ * @date        12 Nov 2025
  */
 
 :root {
     --bg-color: black;
     --fore-color: grey;
+    --accent-color: rgba(0, 255, 128, 0.2);
     --key-width: 60px;
 }
 
@@ -64,10 +65,54 @@ body {
 	width: 70vw;
 	max-width: calc(var(--key-width)*12);
     max-height: 60vh;
+
+	/* CRT tube */
 	background: #111;
-	border-radius: 12px;
+	border-radius: 32px;
 	display: block;
 	margin: 0 auto;
+	position: relative;
+	overflow: hidden;
+
+	/* curved glass effect inside */
+	background-image: 
+        radial-gradient(ellipse at center, rgba(0, 255, 128, 0.05) 0%, #000 100%),
+		radial-gradient(22% 17% at 15% 15%, rgba(255,255,255,0.1), rgba(255,255,255,0.02) 28%, transparent 60%);
+
+	/* bezel edge */
+	border: 4px solid #1a1a1a;   /* dark casing */
+	outline: 2px solid #000;      /* crisp outer cutline */
+	box-shadow:
+		0 4px 12px rgba(0,0,0,0.6), /* drop shadow for depth */
+		inset 0 0 64px var(--accent-color); /* slight highlight on bezel */
+	/* reinforce bezel edge without affecting glow */
+	filter: drop-shadow(0 0 8px var(--accent-color));
+}
+
+/* glass reflection element (child of #scope-screen) */
+.scope-glass-reflection {
+	position: absolute;
+	top: 6%;
+	left: 8%;
+	right: 22%;
+	height: 36%;
+	border-radius: 22px;
+	pointer-events: none;
+	z-index: 10;
+
+	/* layered reflection: soft band + small bright specular */
+	background-image:
+		linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.06)),
+		radial-gradient(60% 40% at 18% 18%, rgba(255,255,255,0.65), rgba(255,255,255,0.08) 28%, transparent 60%);
+	background-repeat: no-repeat;
+	background-size: 100% 100%, 40% 60%;
+	background-position: 0 0, 6% 8%;
+
+	/* shape + curvature illusion */
+	transform: skewY(-6deg);
+	filter: blur(6px);
+	opacity: 0.9;
+	mix-blend-mode: screen;
 }
 
 .left-spacer {
@@ -130,7 +175,7 @@ body {
 	-webkit-appearance: none;
 	appearance: none;
 	width: 28px;
-	height: 32px;
+	height: 34px;
 	border-radius: 25%; /* slightly rounded rectangle */
 
 	/* metallic base */
@@ -178,9 +223,26 @@ body {
 }
 
 .top-row {
-	grid-column: 1 / 4; /* span all three columns */
+	grid-column: 2 / 3; /* place in the middle column */
 	grid-row: 1;
 	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#play-button {
+	display: inline-grid;
+	place-items: center;
+	padding: 0.5rem;
+	box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+	cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#play-button {
+		transition: none;
+	}
 }
 
 .bottom-row {
