@@ -5,8 +5,8 @@
   <title> ScillyScope </title>
   <meta name='author' content='Sarah Rosanna Busch' />
   <meta name='description' content='My entry for the GitHub Game Off 2025' />
-  <meta name='version' content='0.6' />
-  <meta name='date' content='16 Nov 2025' />
+  <meta name='version' content='0.7' />
+  <meta name='date' content='20 Nov 2025' />
   <meta name='keywords' content='waves, sound, oscilloscope, piano, decode, puzzle' />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='50%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='80'>∿</text></svg>">
@@ -31,7 +31,7 @@
     <div class="bottom-row">
         <div id="decoder">
             <button id="record-button" class="btn btn-record" type="button" aria-pressed="false">⏺ Record</button>
-            <button id="play-bottom-button" class="btn btn-play" type="button" aria-pressed="false">▶ Play</button>
+            <button id="play-bottom-button" class="btn btn-play" type="button" aria-pressed="false" disabled="true">▶ Play</button>
             <!-- readonly text input that will be populated while recording -->
             <label for="recorded-sequence" class="visually-hidden">Recorded notes</label>
             <input id="recorded-sequence" type="text" readonly placeholder="Record and play decoded message" aria-live="polite" />
@@ -40,5 +40,9 @@
     </div>
 </div>
 </body>
-<script src='game.js'></script>
+<script type='module' src='./audio.js'></script>
+<script type='module' src='./scopeRenderer.js'></script>
+<script type='module' src='./keyboard.js'></script>
+<script type='module' src='./playRecord.js'></script>
+<script type='module' src='./game.js'></script>
 </html>

@@ -4,7 +4,7 @@
  * @file    server.js
  * @brief   basic nodeJS web server for local testing
  * @author  Sarah Rosanna Busch
- * @date    3 May 2022
+ * @date    20 Nov 2025
  */
 
 const http = require('http');
@@ -26,19 +26,35 @@ const server = new http.createServer(function (req, res) {
         });
     } else if(req.method === 'GET') {
         fs.readFile(filename, function(err, data) {
-            if(err) {
-                res.writeHead(404, {'Content-Type': 'text'});
+            if (err) {
+                res.writeHead(404, { 'Content-Type': 'text/plain' });
                 return res.end("404 File Not Found: " + filename);
             }
-            var mimeType = filename.match(/(?:html|js|css|svg)$/i);
-            if(mimeType && mimeType[0] === 'svg') {
-                mimeType = 'image/svg+xml';
-            } else {
-                mimeType =  mimeType ? 'text/' + mimeType : 'text/plain';
+
+            // Extract extension
+            const ext = filename.split('.').pop().toLowerCase();
+            let mimeType;
+
+            switch (ext) {
+                case 'html':
+                    mimeType = 'text/html';
+                    break;
+                case 'js':
+                    // Correct MIME type for both classic and module scripts
+                    mimeType = 'text/javascript';
+                    break;
+                case 'css':
+                    mimeType = 'text/css';
+                    break;
+                case 'svg':
+                    mimeType = 'image/svg+xml';
+                    break;
+                default:
+                    mimeType = 'text/plain';
             }
-            
-            console.log('serving: ' + filename);
-            res.writeHead(200, {'Content-Type': mimeType });
+
+            console.log('serving: ' + filename + ' as ' + mimeType);
+            res.writeHead(200, { 'Content-Type': mimeType });
             res.write(data);
             res.end();
         });
