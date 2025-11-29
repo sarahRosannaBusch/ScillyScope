@@ -2,8 +2,8 @@
  * @file    playRecord.js
  * @brief   ScillyScope play and record button event handlers
  * @authors Sarah Busch
- * @version 0
- * @date    20 Nov 2025
+ * @version 0.1
+ * @date    21 Nov 2025
  */
 
 import { startNote, stopNote, getFrequency, resolveNoteFromLabel } from "./keyboard.js";
@@ -61,123 +61,6 @@ export function record() {
     }
 }
 
-export function playRecording(melodyStr, callback) {
-    if (recordedNotes.length === 0) return;
-    // prevent double-trigger
-    if (isPlayingRecorded) return;
-
-    // ensure audio context is resumed on user gesture
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-
-    isPlayingRecorded = true;
-    playBottomBtn.classList.add('playing');
-    playBottomBtn.setAttribute('aria-pressed', 'true');
-    playBottomBtn.disabled = true;
-
-    // disable the top play and record buttons while recorded playback runs
-    if (playButton) playButton.disabled = true;
-    if (recordBtn) recordBtn.disabled = true;
-
-    const DEFAULT_NOTE_DURATION = 0.5; // seconds for every note except last
-    const LAST_NOTE_DURATION = 1.0;    // seconds for the final note
-    const NOTE_RELEASE = 0.5;          // seconds — keep in sync with stopNote's release
-
-    // ensure we have a label->note map
-    const map = (typeof labelToNote !== 'undefined' && labelToNote) ? labelToNote : (() => {
-        const m = Object.create(null);
-        if (keyboard) {
-            Array.from(keyboard.querySelectorAll('.key')).forEach(k => {
-                const label = ((k.textContent || k.innerText) || '').trim().toUpperCase();
-                const dn = k.dataset.note || k.getAttribute('data-note');
-                if (label && dn) m[label] = dn;
-            });
-        }
-        return m;
-    })();
-
-    let timeOffset = 0;
-
-    recordedNotes.forEach((entry, idx) => {
-        const note = entry && entry.note ? entry.note : (entry || null);
-        const duration = (idx === recordedNotes.length - 1) ? LAST_NOTE_DURATION : DEFAULT_NOTE_DURATION;
-
-        if (!note) {
-            timeOffset += duration;
-            return;
-        }
-
-        // schedule start
-        setTimeout(() => {
-            const m = String(note).match(/^([A-G]#?)(\d+)$/);
-            if (!m) return;
-            const noteName = m[1];
-            const octave = parseInt(m[2], 10);
-            const freq = getFrequency(noteName, octave);
-
-            startNote(note, freq);
-
-            const keyEl = keyboard && keyboard.querySelector(`.key[data-note="${note}"]`);
-            if (keyEl) {
-                keyEl.classList.add('active');
-                if (typeof DEBUG_HIGHLIGHT_KEYS !== 'undefined' && DEBUG_HIGHLIGHT_KEYS) keyEl.classList.add('debug-playing');
-            }
-        }, timeOffset * 1000);
-
-        // schedule stop
-        setTimeout(() => {
-            stopNote(note);
-            const keyEl = keyboard && keyboard.querySelector(`.key[data-note="${note}"]`);
-            if (keyEl) {
-                keyEl.classList.remove('active');
-                if (typeof DEBUG_HIGHLIGHT_KEYS !== 'undefined' && DEBUG_HIGHLIGHT_KEYS) keyEl.classList.remove('debug-playing');
-            }
-        }, (timeOffset + duration) * 1000);
-
-        timeOffset += duration;
-    });
-
-    // compute end time and revert UI (include release)
-    const totalMs = (timeOffset + NOTE_RELEASE) * 1000;
-    setTimeout(() => {
-        playBottomBtn.classList.remove('playing');
-        playBottomBtn.setAttribute('aria-pressed', 'false');
-        playBottomBtn.disabled = recordedNotes.length === 0;
-
-        // re-enable top play only if we're not currently recording or playing the melody
-        if (playButton) playButton.disabled = !!isRecording || !!isPlaying;
-
-        // re-enable record only if the melody isn't playing
-        if (recordBtn) recordBtn.disabled = !!isPlaying;
-
-        // clear any lingering highlights
-        if (keyboard) {
-            keyboard.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
-            if (typeof DEBUG_HIGHLIGHT_KEYS !== 'undefined' && DEBUG_HIGHLIGHT_KEYS) {
-                keyboard.querySelectorAll('.key.debug-playing').forEach(k => k.classList.remove('debug-playing'));
-            }
-        }
-
-        const expected = Array.from(String(melodyStr)).map(ch => {
-            const label = String(ch).trim().toUpperCase();
-            return label ? (map[String(label)] || null) : null;
-        }).filter(Boolean);
-
-        const actual = recordedNotes.map(e => (e && e.note) ? e.note : String(e || ''));
-
-        const sameLength = expected.length === actual.length;
-        const allMatch = sameLength && expected.every((n, i) => n === actual[i]);
-
-        isPlayingRecorded = false;
-        
-        if (allMatch) {
-            callback('success!');
-        } else {
-            callback('fail!');
-        }
-
-    }, totalMs + 100);
-}
-
 // capture key presses for recording (pointer events cover mouse/touch)
 // ensure we store both the real note and the visible label
 export function recordKeyPresses(ev) {
@@ -199,98 +82,128 @@ export function recordKeyPresses(ev) {
 	}
 }
 
+function schedulePlayback(notes, {
+    onStart = () => {},
+    onFinish = () => {},
+    defaultDuration = 0.5,
+    lastDuration = 1.0,
+    release = 0.1
+}) {
+    let timeOffset = 0;
+
+    notes.forEach((note, idx) => {
+        const duration = (idx === notes.length - 1) ? lastDuration : defaultDuration;
+        if (!note) {
+            timeOffset += duration;
+            return;
+        }
+
+        // schedule start
+        setTimeout(() => {
+            const m = String(note).match(/^([A-G]#?)(\d+)$/);
+            if (!m) return;
+            const freq = getFrequency(m[1], parseInt(m[2], 10));
+            startNote(note, freq);
+
+            const keyEl = keyboard?.querySelector(`.key[data-note="${note}"]`);
+            if (keyEl) {
+                keyEl.classList.add('active');
+                if (DEBUG_HIGHLIGHT_KEYS) keyEl.classList.add('debug-playing');
+            }
+            onStart(note);
+        }, timeOffset * 1000);
+
+        // schedule stop
+        setTimeout(() => {
+            stopNote(note);
+            const keyEl = keyboard?.querySelector(`.key[data-note="${note}"]`);
+            if (keyEl) {
+                keyEl.classList.remove('active');
+                if (DEBUG_HIGHLIGHT_KEYS) keyEl.classList.remove('debug-playing');
+            }
+        }, (timeOffset + duration) * 1000);
+
+        timeOffset += duration;
+    });
+
+    // cleanup after playback
+    const totalMs = (timeOffset + release) * 1000;
+    setTimeout(onFinish, totalMs);
+}
+
 export function playMelody(melodyStr) {
-	// resume audio on user gesture
-	if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (isPlaying || !melodyStr) return;
+    isPlaying = true;
 
-	// guard
-	if (isPlaying) return;
-	if (!melodyStr || melodyStr.length === 0) return;
-	isPlaying = true;
+    playButton?.classList.add('playing');
+    playButton?.setAttribute('aria-pressed', 'true');
+    recordBtn && (recordBtn.disabled = true);
+    playBottomBtn && (playBottomBtn.disabled = true);
 
-	// UI: mark playing
-	if (playButton) {
-		playButton.classList.add('playing');
-		playButton.setAttribute('aria-pressed', 'true');
-	}
+    const notes = Array.from(melodyStr)
+        .map(ch => resolveNoteFromLabel(ch.trim().toUpperCase()))
+        .filter(Boolean);
 
-	// disable record and bottom-play while the melody runs
-	if (recordBtn) recordBtn.disabled = true;
-	if (playBottomBtn) playBottomBtn.disabled = true;
+    schedulePlayback(notes, {
+        onFinish: () => {
+            playButton?.classList.remove('playing');
+            playButton?.setAttribute('aria-pressed', 'false');
+            if (recordBtn) recordBtn.disabled = !!isRecording || !!isPlayingRecorded;
+            if (playBottomBtn) playBottomBtn.disabled = recordedNotes.length === 0 || !!isRecording || !!isPlayingRecorded;
+            keyboard?.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+            if (DEBUG_HIGHLIGHT_KEYS) keyboard?.querySelectorAll('.key.debug-playing').forEach(k => k.classList.remove('debug-playing'));
+            isPlaying = false;
+        }
+    });
+}
 
-	const DEFAULT_NOTE_DURATION = 0.5; // seconds for every note except last
-	const LAST_NOTE_DURATION = 1.0;    // seconds for the final note
-	const NOTE_RELEASE = 0.5;          // keep in sync with stopNote's release
+export function playRecording(melodyStr, callback) {
+    if (!recordedNotes.length || isPlayingRecorded) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isPlayingRecorded = true;
 
-	let timeOffset = 0;
-	const chars = Array.from(String(melodyStr));
+    playBottomBtn.classList.add('playing');
+    playBottomBtn.setAttribute('aria-pressed', 'true');
+    playBottomBtn.disabled = true;
+    playButton && (playButton.disabled = true);
+    recordBtn && (recordBtn.disabled = true);
 
-	chars.forEach((ch, idx) => {
-		// treat each character as a visible key label; ignore whitespace
-		const labelRaw = String(ch);
-		const label = labelRaw.trim().toUpperCase();
-		const duration = (idx === chars.length - 1) ? LAST_NOTE_DURATION : DEFAULT_NOTE_DURATION;
+    // ensure we have a label->note map
+    const map = (typeof labelToNote !== 'undefined' && labelToNote) ? labelToNote : (() => {
+        const m = Object.create(null);
+        if (keyboard) {
+            Array.from(keyboard.querySelectorAll('.key')).forEach(k => {
+                const label = ((k.textContent || k.innerText) || '').trim().toUpperCase();
+                const dn = k.dataset.note || k.getAttribute('data-note');
+                if (label && dn) m[label] = dn;
+            });
+        }
+        return m;
+    })();
 
-		if (!label) {
-			// skip unresolved label but advance time
-			timeOffset += duration;
-			return;
-		}
+    const notes = recordedNotes.map(e => e?.note || e);
 
-		const dataNote = resolveNoteFromLabel(label);
-		if (!dataNote) {
-			// skip unresolved label but advance time
-			timeOffset += duration;
-			return;
-		}
+    schedulePlayback(notes, {
+        onFinish: () => {
+            playBottomBtn.classList.remove('playing');
+            playBottomBtn.setAttribute('aria-pressed', 'false');
+            playBottomBtn.disabled = recordedNotes.length === 0;
+            if (playButton) playButton.disabled = !!isRecording || !!isPlaying;
+            if (recordBtn) recordBtn.disabled = !!isPlaying;
+            keyboard?.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+            if (DEBUG_HIGHLIGHT_KEYS) keyboard?.querySelectorAll('.key.debug-playing').forEach(k => k.classList.remove('debug-playing'));
 
-		// schedule start
-		setTimeout(() => {
-			const m = String(dataNote).match(/^([A-G]#?)(\d+)$/);
-			if (!m) return;
-			const freq = getFrequency(m[1], parseInt(m[2], 10));
-			startNote(dataNote, freq);
+            const expected = Array.from(String(melodyStr)).map(ch => {
+                const label = String(ch).trim().toUpperCase();
+                return label ? (map[String(label)] || null) : null;
+            }).filter(Boolean);
 
-			const keyEl = keyboard && keyboard.querySelector(`.key[data-note="${dataNote}"]`);
-			if (keyEl) {
-				keyEl.classList.add('active');
-				if (DEBUG_HIGHLIGHT_KEYS) keyEl.classList.add('debug-playing');
-			}
-		}, timeOffset * 1000);
+            const actual = notes.map(e => (e && e.note) ? e.note : String(e || ''));
 
-		// schedule stop
-		setTimeout(() => {
-			stopNote(dataNote);
-			const keyEl = keyboard && keyboard.querySelector(`.key[data-note="${dataNote}"]`);
-			if (keyEl) {
-				keyEl.classList.remove('active');
-				if (DEBUG_HIGHLIGHT_KEYS) keyEl.classList.remove('debug-playing');
-			}
-		}, (timeOffset + duration) * 1000);
-
-		timeOffset += duration;
-	});
-
-	// total playback length (notes + release)
-	const totalMs = (timeOffset + NOTE_RELEASE) * 1000;
-
-	// revert UI after playback finishes
-	setTimeout(() => {
-		if (playButton) {
-			playButton.classList.remove('playing');
-			playButton.setAttribute('aria-pressed', 'false');
-		}
-
-		// restore record and bottom-play appropriately
-		if (recordBtn) recordBtn.disabled = !!isRecording || !!isPlayingRecorded;
-		if (playBottomBtn) playBottomBtn.disabled = recordedNotes.length === 0 || !!isRecording || !!isPlayingRecorded;
-
-		// clear any lingering highlights
-		if (keyboard) {
-			keyboard.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
-			if (DEBUG_HIGHLIGHT_KEYS) keyboard.querySelectorAll('.key.debug-playing').forEach(k => k.classList.remove('debug-playing'));
-		}
-
-		isPlaying = false;
-	}, totalMs);
+            const allMatch = expected.length === actual.length && expected.every((n, i) => n === actual[i]);
+            isPlayingRecorded = false;
+            callback(allMatch ? 'success!' : 'fail!');
+        }
+    });
 }

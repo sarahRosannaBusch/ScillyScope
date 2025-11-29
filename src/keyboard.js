@@ -2,8 +2,8 @@
  * @file    keyboard.js
  * @brief   ScillyScope piano keys
  * @authors Sarah Busch
- * @version 0
- * @date    20 Nov 2025
+ * @version 0.1
+ * @date    29 Nov 2025
  */
 
 import { audioCtx, volume, analyser, setVars, clearVars } from "./audio.js";
@@ -143,7 +143,7 @@ export function stopNote(note) {
 
 	const { osc, gain } = entry;
 	const now = audioCtx.currentTime;
-	const release = 0.5;
+	const release = 0.1;
 
 	// smooth release
 	gain.gain.cancelScheduledValues(now);
