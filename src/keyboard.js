@@ -2,7 +2,7 @@
  * @file    keyboard.js
  * @brief   ScillyScope piano keys
  * @authors Sarah Busch
- * @version 0.1
+ * @version 0.2
  * @date    29 Nov 2025
  */
 
@@ -31,7 +31,7 @@ export function createKeyboard() {
     const endNoteName = 'B';
 
     // label pool: A..Z once, then one visible space symbol U+2423 (␣)
-    const labelPool = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '\u2423'];
+    const labelPool = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ'"];
     let labelIndex = 0;
 
     for (let octave = startOctave; octave <= endOctave; octave++) {
@@ -56,7 +56,7 @@ export function createKeyboard() {
             whiteKey.dataset.note = fullNote;
 
             // visible label from pool (A..Z once, plus U+2423 for the extra key)
-            const label = labelPool[labelIndex] || '\u2423';
+            const label = labelPool[labelIndex];
             whiteKey.textContent = label;
             whiteKey.setAttribute('aria-label', label);
 
@@ -82,7 +82,7 @@ export function createKeyboard() {
                 blackKey.dataset.note = fullBlackNote;
 
                 // visible label for black key from pool
-                const blackLabel = labelPool[labelIndex] || '\u2423';
+                const blackLabel = labelPool[labelIndex];
                 blackKey.textContent = blackLabel;
                 blackKey.setAttribute('aria-label', blackLabel);
 

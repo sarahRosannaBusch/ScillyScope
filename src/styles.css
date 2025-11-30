@@ -2,7 +2,7 @@
  * @filename    styles.css
  * @brief       ScillyScope styles
  * @author      Sarah Rosanna Busch
- * @version     0.7
+ * @version     0.8
  * @date        29 Nov 2025
  */
 
@@ -46,16 +46,21 @@ body {
 /* ****************************** layout ****************************** */
 
 .top-row {
-	flex: 0.1;
+	flex: 0.15;
 	display: flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: space-between; /* push left and right sections apart */
+	padding: 0.5rem 1rem;
+	gap: 1rem; /* space between left and right sections */
+    margin-left: 3rem;
+    margin-right: 3rem;
 }
+
 
 .middle-row {
 	display: flex;
 	align-items: center;
-	flex: 0.6;
+	flex: 0.55;
 	overflow: hidden;
 	width: 100%;
 	max-width: calc(var(--key-width) * 16); 
@@ -288,6 +293,55 @@ body {
 	padding: 8px 12px;
 	border-top: 1px solid #222;
     border-radius: 10px;
+}
+
+/* ********** Haiku ********** */
+
+/* left side controls */
+.left-controls {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+    padding-left: 2rem;
+}
+
+/* right side word covers */
+.right-words {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+    border:1px solid #333;
+    padding: 10px;
+    margin-right: 1rem;
+}
+
+/* each row of word covers */
+.word-row {
+	display: flex;
+	gap: 0.5rem;
+}
+
+/* cover buttons */
+.word-cover {
+	padding: 0.23rem 0.6rem;
+    border: none;
+	border-bottom: 1px solid #333;
+	background-color: #000;
+    color: #555;
+	cursor: pointer;
+	transition: background-color 0.2s, transform 0.2s;
+}
+
+.word-cover:hover {
+    border: none;
+	border-bottom: 1px solid #0f0;
+    color: #0f0;
+}
+
+.word-cover.highlight {
+    border: none;
+	border-bottom: 1px solid #0f0;
+    color: #0f0;
 }
 
 

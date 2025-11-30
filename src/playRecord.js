@@ -2,8 +2,8 @@
  * @file    playRecord.js
  * @brief   ScillyScope play and record button event handlers
  * @authors Sarah Busch
- * @version 0.1
- * @date    21 Nov 2025
+ * @version 0.2
+ * @date    29 Nov 2025
  */
 
 import { startNote, stopNote, getFrequency, resolveNoteFromLabel } from "./keyboard.js";
@@ -68,7 +68,7 @@ export function recordKeyPresses(ev) {
 	if (!keyEl) return;
 
 	const note = keyEl.dataset.note || keyEl.getAttribute('data-note') || null;
-	const label = keyEl.textContent || '\u2423';
+	const label = keyEl.textContent;
 
 	// dispatch a global event so other code can react if needed
 	if (note) {
@@ -129,6 +129,87 @@ function schedulePlayback(notes, {
     // cleanup after playback
     const totalMs = (timeOffset + release) * 1000;
     setTimeout(onFinish, totalMs);
+}
+
+export function playHaiku(wordsArr, callback) {
+	if (audioCtx.state === 'suspended') audioCtx.resume();
+	if (isPlaying || !Array.isArray(wordsArr) || wordsArr.length === 0) return;
+	isPlaying = true;
+
+	playButton?.classList.add('playing');
+	playButton?.setAttribute('aria-pressed', 'true');
+	recordBtn && (recordBtn.disabled = true);
+	playBottomBtn && (playBottomBtn.disabled = true);
+
+	// Build notes and track indices where each word starts
+	const notes = [];
+	const wordStarts = []; // index in `notes` of the first note for each word
+
+	wordsArr.forEach((word, idx) => {
+		const letters = Array.from(word)
+			.map(ch => resolveNoteFromLabel(ch.trim().toUpperCase()))
+			.filter(Boolean);
+
+		wordStarts.push(notes.length);
+		notes.push(...letters);
+
+		// insert a null pause between words
+		if (idx < wordsArr.length - 1) {
+			notes.push(null);
+		}
+	});
+
+	// Durations per note as schedulePlayback will use them
+	// (last element uses lastDuration, all others use defaultDuration)
+	const defaultDuration = 0.25;
+	const lastDuration = 0.5;
+	const release = 0.1;
+
+	const durations = notes.map((_, i) =>
+		i === notes.length - 1 ? lastDuration : defaultDuration
+	);
+
+	// Precompute start times (in seconds) for each word
+	const wordStartTimes = wordStarts.map(startIdx => {
+		let t = 0;
+		for (let i = 0; i < startIdx; i++) t += durations[i];
+		return t;
+	});
+
+	// Helper to highlight all covers for a given word index
+	function highlightWord(wordIndex) {
+		document.querySelectorAll('.word-cover').forEach(btn => btn.classList.remove('highlight'));
+		document.querySelectorAll(`.word-cover[data-word-index="${wordIndex}"]`)
+			.forEach(btn => btn.classList.add('highlight'));
+	}
+
+	// Schedule highlights for each word start
+	wordStartTimes.forEach((t, wordIdx) => {
+		setTimeout(() => {
+			highlightWord(wordIdx);
+		}, t * 1000);
+	});
+
+	// Kick off audio playback
+	schedulePlayback(notes, {
+		defaultDuration,
+		lastDuration,
+		release,
+		onFinish: () => {
+			playButton?.classList.remove('playing');
+			playButton?.setAttribute('aria-pressed', 'false');
+			if (recordBtn) recordBtn.disabled = !!isRecording || !!isPlayingRecorded;
+			if (playBottomBtn) playBottomBtn.disabled = recordedNotes.length === 0 || !!isRecording || !!isPlayingRecorded;
+			keyboard?.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+			if (DEBUG_HIGHLIGHT_KEYS) keyboard?.querySelectorAll('.key.debug-playing').forEach(k => k.classList.remove('debug-playing'));
+			isPlaying = false;
+
+			// Clear highlight when playback ends
+			document.querySelectorAll('.word-cover').forEach(btn => btn.classList.remove('highlight'));
+
+			callback();
+		}
+	});
 }
 
 export function playMelody(melodyStr) {
