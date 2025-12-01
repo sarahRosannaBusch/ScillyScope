@@ -2,8 +2,8 @@
  * @file    audio.js
  * @brief   ScillyScope audio
  * @authors Sarah Busch
- * @version 0
- * @date    20 Nov 2025
+ * @version 1.0
+ * @date    30 Nov 2025
  */
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;

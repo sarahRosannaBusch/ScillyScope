@@ -2,8 +2,8 @@
  * @filename    styles.css
  * @brief       ScillyScope styles
  * @author      Sarah Rosanna Busch
- * @version     0.8
- * @date        29 Nov 2025
+ * @version     1.0
+ * @date        30 Nov 2025
  */
 
 :root {
@@ -43,19 +43,22 @@ body {
 	overflow: hidden;
 }
 
+@media (max-width: 768px) {
+    #game {
+        height: 60vh;          /* full viewport height */
+        max-height: none;       /* remove cap */
+    }
+}
+
 /* ****************************** layout ****************************** */
 
 .top-row {
 	flex: 0.15;
+    min-height: 8rem;
 	display: flex;
 	align-items: center;
-	justify-content: space-between; /* push left and right sections apart */
-	padding: 0.5rem 1rem;
-	gap: 1rem; /* space between left and right sections */
-    margin-left: 3rem;
-    margin-right: 3rem;
+    justify-content: center;
 }
-
 
 .middle-row {
 	display: flex;
@@ -244,6 +247,47 @@ body {
 
 /* ****************************** UI ****************************** */
 
+#haiku {
+	display: flex;
+    flex-direction: column;
+	gap: 0.25rem;
+	background: #0b0b0b;
+    border-radius: 10px;
+	border: 1px solid #000;
+    outline: 2px solid #222; 
+    padding: 10px;
+}
+
+/* each row of word covers */
+.word-row {
+	display: flex;
+	gap: 0.5rem;
+}
+
+/* cover buttons */
+.word-cover {
+	padding: 0.23rem 0.6rem;
+    border: none;
+	border-bottom: 1px solid #333;
+    border-radius: 5px;
+	background: #000;
+    color: #666;
+	cursor: pointer;
+	transition: background-color 0.2s, transform 0.2s;
+}
+
+.active .word-cover:hover {
+    border: none;
+	border-bottom: 1px solid #0f0;
+    color: #0f0;
+}
+
+.word-cover.highlight {
+    border: none;
+	border-bottom: 1px solid #0f0;
+    color: #0f0;
+}
+
 .btn {
 	background: #111;
 	color: #0f0;
@@ -293,55 +337,6 @@ body {
 	padding: 8px 12px;
 	border-top: 1px solid #222;
     border-radius: 10px;
-}
-
-/* ********** Haiku ********** */
-
-/* left side controls */
-.left-controls {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-    padding-left: 2rem;
-}
-
-/* right side word covers */
-.right-words {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-    border:1px solid #333;
-    padding: 10px;
-    margin-right: 1rem;
-}
-
-/* each row of word covers */
-.word-row {
-	display: flex;
-	gap: 0.5rem;
-}
-
-/* cover buttons */
-.word-cover {
-	padding: 0.23rem 0.6rem;
-    border: none;
-	border-bottom: 1px solid #333;
-	background-color: #000;
-    color: #555;
-	cursor: pointer;
-	transition: background-color 0.2s, transform 0.2s;
-}
-
-.word-cover:hover {
-    border: none;
-	border-bottom: 1px solid #0f0;
-    color: #0f0;
-}
-
-.word-cover.highlight {
-    border: none;
-	border-bottom: 1px solid #0f0;
-    color: #0f0;
 }
 
 

@@ -5,8 +5,8 @@
   <title> ScillyScope </title>
   <meta name='author' content='Sarah Rosanna Busch' />
   <meta name='description' content='My entry for the GitHub Game Off 2025' />
-  <meta name='version' content='0.8' />
-  <meta name='date' content='29 Nov 2025' />
+  <meta name='version' content='1.0' />
+  <meta name='date' content='30 Nov 2025' />
   <meta name='keywords' content='waves, sound, oscilloscope, piano, decode, puzzle' />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='50%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='80'>∿</text></svg>">
@@ -15,12 +15,10 @@
 <body>
 <div id="game">
     <div class="top-row">
-        <div class="left-controls">
-            <button id="play-button" class="btn btn-play" type="button" aria-pressed="false">
-                ▶ Play Hidden Haiku
-            </button>
-        </div>
-        <div class="right-words">
+        <button id="play-button" class="btn btn-play" type="button" aria-pressed="false">
+            ▶ Play Hidden Haiku
+        </button>
+        <div id="haiku" style="display:none">
             <div class="word-row">
                 <button class="word-cover" data-word-index="0">????</button>
                 <button class="word-cover" data-word-index="1">?????</button>
@@ -38,7 +36,6 @@
                 <button class="word-cover" data-word-index="9">?????</button>
                 <button class="word-cover" data-word-index="10">?????</button>
             </div>
-            <!-- add more rows dynamically if your haiku has more words -->
         </div>
     </div>
     <div class="middle-row">
@@ -56,7 +53,7 @@
             <button id="play-bottom-button" class="btn btn-play" type="button" aria-pressed="false" disabled="true">▶ Play</button>
             <!-- readonly text input that will be populated while recording -->
             <label for="recorded-sequence" class="visually-hidden">Recorded notes</label>
-            <input id="recorded-sequence" type="text" readonly placeholder="Record and play decoded word" aria-live="polite" />
+            <input id="recorded-sequence" type="text" readonly placeholder="Record and play a tune" aria-live="polite" />
         </div>
         <div id="keyboard"></div>
     </div>

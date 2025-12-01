@@ -2,8 +2,8 @@
  * @file    keyboard.js
  * @brief   ScillyScope piano keys
  * @authors Sarah Busch
- * @version 0.2
- * @date    29 Nov 2025
+ * @version 1.0
+ * @date    30 Nov 2025
  */
 
 import { audioCtx, volume, analyser, setVars, clearVars } from "./audio.js";

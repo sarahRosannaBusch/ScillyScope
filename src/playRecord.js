@@ -2,8 +2,8 @@
  * @file    playRecord.js
  * @brief   ScillyScope play and record button event handlers
  * @authors Sarah Busch
- * @version 0.2
- * @date    29 Nov 2025
+ * @version 1.0
+ * @date    30 Nov 2025
  */
 
 import { startNote, stopNote, getFrequency, resolveNoteFromLabel } from "./keyboard.js";
@@ -212,9 +212,14 @@ export function playHaiku(wordsArr, callback) {
 	});
 }
 
+let lastMelody;
 export function playMelody(melodyStr) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     if (isPlaying || !melodyStr) return;
+    if(melodyStr !== lastMelody) {
+        recordedInput.value = "Record what you hear, then play it to check your results"; 
+        lastMelody = melodyStr;
+    }
     isPlaying = true;
 
     playButton?.classList.add('playing');
@@ -284,7 +289,7 @@ export function playRecording(melodyStr, callback) {
 
             const allMatch = expected.length === actual.length && expected.every((n, i) => n === actual[i]);
             isPlayingRecorded = false;
-            callback(allMatch ? 'success!' : 'fail!');
+            callback(allMatch ? true : false);
         }
     });
 }
