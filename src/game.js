@@ -2,13 +2,15 @@
  * @file    game.js
  * @brief   ScillyScope scripts
  * @authors Sarah Busch
- * @version 1.0
- * @date    30 Nov 2025
+ * @version 1.1
+ * @date    29 Dec 2025
  */
 
 import { createKeyboard } from "./keyboard.js";
 import { drawScope } from "./scopeRenderer.js";
-import { initBtns, record, playRecording, recordKeyPresses, playMelody, playHaiku } from "./playRecord.js";
+import { initBtns, record, 
+    playRecording, recordKeyPresses, isRecording,
+    playMelody, playHaiku } from "./playRecord.js";
 
 const keyboard = createKeyboard();
 drawScope();
@@ -56,6 +58,8 @@ function startGame() {
         wordButtons.forEach(button => {
             button.disabled = false;
             button.addEventListener('click', () => {
+                if(isRecording) return;
+
                 recordedInput.style.borderColor = '#0f0';
                 recordedInput.style.color = '#0f0';
 

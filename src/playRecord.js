@@ -2,8 +2,8 @@
  * @file    playRecord.js
  * @brief   ScillyScope play and record button event handlers
  * @authors Sarah Busch
- * @version 1.0
- * @date    30 Nov 2025
+ * @version 1.1
+ * @date    29 Dec 2025
  */
 
 import { startNote, stopNote, getFrequency, resolveNoteFromLabel } from "./keyboard.js";
@@ -15,7 +15,7 @@ const DEBUG_HIGHLIGHT_KEYS = false;
 const recordedInput = document.getElementById('recorded-sequence');
 
 // recording state
-let isRecording = false;
+export let isRecording = false;
 let recordedNotes = [];
 
 // top-level flags
@@ -89,8 +89,8 @@ function schedulePlayback(notes, {
     lastDuration = 1.0,
     release = 0.1
 }) {
+    disableInput();
     let timeOffset = 0;
-
     notes.forEach((note, idx) => {
         const duration = (idx === notes.length - 1) ? lastDuration : defaultDuration;
         if (!note) {
@@ -128,7 +128,10 @@ function schedulePlayback(notes, {
 
     // cleanup after playback
     const totalMs = (timeOffset + release) * 1000;
-    setTimeout(onFinish, totalMs);
+    setTimeout(() => {
+        onFinish();
+        enableInput();
+    }, totalMs);
 }
 
 export function playHaiku(wordsArr, callback) {
@@ -292,4 +295,12 @@ export function playRecording(melodyStr, callback) {
             callback(allMatch ? true : false);
         }
     });
+}
+
+function disableInput() {
+	document.getElementById('input-blocker').style.pointerEvents = 'auto';
+}
+
+function enableInput() {
+	document.getElementById('input-blocker').style.pointerEvents = 'none';
 }
